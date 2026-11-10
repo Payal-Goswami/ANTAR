@@ -7,6 +7,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from mde.analysis.metrics import model_metrics
+from mde.analysis.pairs import all_pairs
+from mde.analysis.slices import slice_table
 from mde.data.diagnostics import detect_feature_flags, resolve_columns
 from mde.data.report import build_quality_report
 from mde.data.target import build_labelled_set
@@ -86,6 +88,7 @@ def main() -> None:
     for section in quality["sections"]:
         print(f"- {section['id']} ({section['source']})")
     print("\nMetrics:")
+    successful = {key: value for key, value in results.items() if value["status"] == "done"}
     for key in ["dummy", "logreg", "tree", "rf", "xgb"]:
         if key not in results:
             continue
@@ -95,6 +98,15 @@ def main() -> None:
             continue
         metrics = model_metrics(y_test_encoded.to_numpy(), model_result["pred"], model_result["proba"], len(label_order))
         print(f"{key}: accuracy={metrics['accuracy']['value']:.4f}")
+
+    print("\nPair stats:")
+    for pair in all_pairs(y_test_encoded.to_numpy(), successful):
+        print(f"{pair['model_a']} vs {pair['model_b']}: p_raw={pair['p_raw']:.4f}, p_holm={pair['p_holm']:.4f}")
+
+    sample_feature = next((col for col in feature_cols if raw[col].nunique() > 1), feature_cols[0])
+    print(f"\nSlice table for {sample_feature}:")
+    for row in slice_table(raw[sample_feature].to_numpy(), "numeric", y_test_encoded.to_numpy(), successful["logreg"]["pred"], successful["tree"]["pred"]):
+        print(row)
 
 
 if __name__ == "__main__":

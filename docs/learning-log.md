@@ -9,3 +9,8 @@
 - Train-only diagnostics are the right place for feature flags because the test split is for measurement, not model setup.
 - Repeated feature vectors are reported as a ceiling on what a model can possibly get right, not as rows to delete.
 - Whole-number ID-like columns need an explicit decision because a consecutive row ID is useful metadata, while a random identifier is noise.
+
+## Day 5
+- Pairwise model comparison is a disagreement problem: the information lives in discordant rows, not in overall accuracy alone.
+- McNemar's exact test is the right check for paired predictions because each row is a paired observation with two models.
+- Holm adjustment protects the family-wise error rate when comparing multiple model pairs, while Wilson intervals communicate uncertainty for small slice sizes.
