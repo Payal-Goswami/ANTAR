@@ -30,7 +30,7 @@ def build_labelled_set(
     missing_mask = cleaned.isna()
     dropped_missing = int(missing_mask.sum())
     kept = df_raw.loc[~missing_mask].copy()
-    kept.loc[~missing_mask, target] = cleaned.loc[~missing_mask].to_numpy()
+    kept[target] = cleaned.loc[~missing_mask].astype(object).to_numpy()
 
     if kept.empty:
         raise TargetError("The labelled set is empty after dropping missing targets.", {"target": target})

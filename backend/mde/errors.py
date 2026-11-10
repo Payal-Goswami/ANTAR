@@ -51,3 +51,8 @@ class TooLarge(MdeError):
 class TooManyColumns(MdeError):
     code = "too_many_columns"
     http_status = 422
+
+
+class BadRequest(MdeError):
+    code = "bad_request"
+    http_status = 400
