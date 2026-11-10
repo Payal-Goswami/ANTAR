@@ -4,3 +4,8 @@
 - Read CSV headers before pandas so duplicate names are caught before pandas can rename them.
 - Read fields as text first to preserve labels such as `NA`; only explicit missing tokens are converted.
 - Numeric inference and target cleanup are separate because feature values and labels have different policies.
+
+## Day 3
+- Train-only diagnostics are the right place for feature flags because the test split is for measurement, not model setup.
+- Repeated feature vectors are reported as a ceiling on what a model can possibly get right, not as rows to delete.
+- Whole-number ID-like columns need an explicit decision because a consecutive row ID is useful metadata, while a random identifier is noise.
