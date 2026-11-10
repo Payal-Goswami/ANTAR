@@ -6,15 +6,17 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from mde.analysis.metrics import model_metrics
 from mde.data.diagnostics import detect_feature_flags, resolve_columns
 from mde.data.report import build_quality_report
 from mde.data.target import build_labelled_set
 from mde.data.split import make_split
 from mde.samples import ensure_sample_csv
+from mde.training.train import encode_labels, fit_models
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the Day 3 core pipeline.")
+    parser = argparse.ArgumentParser(description="Run the Day 4 core pipeline.")
     parser.add_argument("--csv", type=str, default=None)
     parser.add_argument("--target", type=str, default="diagnosis")
     parser.add_argument("--seed", type=int, default=42)
@@ -57,6 +59,24 @@ def main() -> None:
         target_column=args.target,
         missing_tokens={"features": [], "target": args.tokens},
     )
+    feature_cols = [col for col in raw.columns if col != args.target and col in resolved["included"] or col not in resolved["excluded"]]
+    feature_cols = [col for col in raw.columns if col != args.target]
+    X_train = train_df[feature_cols]
+    X_test = test_df[feature_cols]
+    y_train = labelled.y.loc[record.train_ids]
+    y_test = labelled.y.loc[record.test_ids]
+    label_order = sorted(labelled.y.unique().tolist())
+    y_test_encoded = encode_labels(label_order, y_test)
+    results = fit_models(
+        X_train=X_train,
+        y_train=y_train,
+        X_test=X_test,
+        numeric_cols=[col for col in feature_cols if raw[col].dtype.kind in "iufc"],
+        categorical_cols=[col for col in feature_cols if col not in [col for col in feature_cols if raw[col].dtype.kind in "iufc"]],
+        model_keys=["dummy", "logreg", "tree", "rf", "xgb"],
+        seed=args.seed,
+        n_jobs=1,
+    )
 
     print(f"Labelled rows: {len(labelled.y)}")
     print(f"Train rows: {len(record.train_ids)}")
@@ -65,6 +85,16 @@ def main() -> None:
     print("Quality report sections:")
     for section in quality["sections"]:
         print(f"- {section['id']} ({section['source']})")
+    print("\nMetrics:")
+    for key in ["dummy", "logreg", "tree", "rf", "xgb"]:
+        if key not in results:
+            continue
+        model_result = results[key]
+        if model_result["status"] == "failed":
+            print(f"{key}: failed - {model_result['error']}")
+            continue
+        metrics = model_metrics(y_test_encoded.to_numpy(), model_result["pred"], model_result["proba"], len(label_order))
+        print(f"{key}: accuracy={metrics['accuracy']['value']:.4f}")
 
 
 if __name__ == "__main__":
