@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.metadata
+import math
 import threading
 from datetime import datetime, timezone
 from typing import Callable
@@ -24,7 +25,9 @@ def _json_value(value):
     if isinstance(value, np.ndarray):
         return _json_value(value.tolist())
     if isinstance(value, np.generic):
-        return value.item()
+        return _json_value(value.item())
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
     if value is None or isinstance(value, (str, int, float, bool)):
         return value
     return str(value)

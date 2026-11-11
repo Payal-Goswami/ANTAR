@@ -1,15 +1,34 @@
 from __future__ import annotations
 
+import json
 import time
 import uuid
 from dataclasses import replace
 
+import numpy as np
 import pandas as pd
 
-from mde.runner import ThreadJobRunner, run_experiment
+from mde.runner import ThreadJobRunner, _json_value, run_experiment
 from mde.settings import Settings
 from mde.store import FileRunStore
 from mde.training.registry import REGISTRY
+
+
+def test_json_value_converts_non_finite_model_parameters_to_null():
+    payload = _json_value(
+        {
+            "unset": float("nan"),
+            "numpy_infinity": np.float64(np.inf),
+            "nested": [float("-inf")],
+        }
+    )
+
+    assert payload == {
+        "unset": None,
+        "numpy_infinity": None,
+        "nested": [None],
+    }
+    json.dumps(payload, allow_nan=False)
 
 
 def _prepare_run(tmp_path, models):
