@@ -20,3 +20,9 @@
 - Validate opaque IDs before constructing filesystem paths; a UUID-shaped ID is part of path safety, not just formatting.
 - Preflight is deterministic from the upload, saved split, and explicit feature choices, so it can be recomputed rather than stored as stale state.
 - Keep API errors in one `{code, message, details}` envelope so clients can handle validation and domain failures consistently.
+
+## Day 7
+- A non-blocking lock enforces the single-active-run product rule; a queue would accept work the product explicitly promises to reject.
+- Persist status and outputs as files so polling and server restarts do not depend on in-memory job state.
+- Put lock release and upload cleanup in `finally` paths: success, training failures and exceptions must all unblock the next run.
+- Startup recovery marks abandoned running jobs interrupted and removes their temporary inputs; completed results remain available in history.
