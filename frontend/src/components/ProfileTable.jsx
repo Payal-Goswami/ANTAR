@@ -26,6 +26,6 @@ export default function ProfileTable({ columns, rows, totalColumns }) {
           </tbody>
         </table>
       </div>
-      <p className="table-footnote">Types are inferred from the full file for schema reporting. The profile does not make feature-selection decisions.</p>
+      <p className="table-footnote">Column types are inferred from the full file.</p>
     </section>);
 }

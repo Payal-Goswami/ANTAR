@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { ArrowDown, ArrowRight, Check, CloudUpload, FileSpreadsheet, FlaskConical, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Check, CloudUpload, FileSpreadsheet, FlaskConical, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { ApiError, createSplit, uploadFile, uploadSample } from '../api';
 import ClassTable from '../components/ClassTable';
@@ -85,8 +85,8 @@ export default function UploadSplit() {
         <div className="eyebrow"><span className="eyebrow-line"/> MODEL ANALYSIS <span className="eyebrow-divider">/</span> STEP 01</div>
         <div className="intro-row">
           <div>
-            <h1>Start with your data.</h1>
-            <p className="intro-copy">A clear, controlled comparison begins with one dataset and one fixed split.</p>
+            <h1>New analysis</h1>
+            <p className="intro-copy">Upload a CSV, choose a target, and set a reproducible split.</p>
           </div>
           <div className="intro-mark"><FlaskConical size={21} strokeWidth={1.6}/></div>
         </div>
@@ -105,16 +105,16 @@ export default function UploadSplit() {
       {!uploaded ? (<section className={`card upload-card${dragging ? ' dragging' : ''}`} onDragOver={(event) => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={onDrop}>
           <div className="upload-topline">
             <div>
-              <span className="section-kicker">YOUR WORKSPACE, YOUR DATA</span>
-              <h2>Bring in a dataset</h2>
-              <p className="muted-copy">Choose a CSV from your computer or explore with the included sample.</p>
+              <span className="section-kicker">DATASET</span>
+              <h2>Choose a dataset</h2>
+              <p className="muted-copy">Upload a CSV or use the sample.</p>
             </div>
             <div className="upload-symbol"><CloudUpload size={23} strokeWidth={1.65}/></div>
           </div>
           <button type="button" className="dropzone" onClick={() => fileInput.current?.click()} disabled={busy}>
             <span className="dropzone-icon"><FileSpreadsheet size={22}/></span>
             <span className="dropzone-title">{busy ? 'Preparing your dataset…' : 'Drop your CSV here, or browse'}</span>
-            <span className="dropzone-subtitle">CSV format · up to 20 MB · stored locally for this analysis</span>
+            <span className="dropzone-subtitle">CSV · up to 20 MB</span>
             <span className="browse-button">{busy ? <RefreshCw size={15} className="spin"/> : 'Browse files'}</span>
           </button>
           <input ref={fileInput} className="visually-hidden" type="file" accept=".csv,text/csv" onChange={onFileChange}/>
@@ -122,13 +122,13 @@ export default function UploadSplit() {
           <div className="sample-row">
             <div className="sample-details">
               <span className="sample-icon"><FlaskConical size={17}/></span>
-              <div><strong>Breast Cancer Wisconsin</strong><small>569 observations · 30 measured features · binary target</small></div>
+              <div><strong>Breast Cancer Wisconsin</strong><small>569 rows · 30 features</small></div>
             </div>
             <button type="button" className="button button-secondary" disabled={busy} onClick={() => { setError(null); sampleMutation.mutate(); }}>
               <Sparkles size={15}/> Try the sample <ArrowRight size={14}/>
             </button>
           </div>
-          <div className="privacy-strip"><ShieldCheck size={15}/><span>Your file stays on this machine. Nothing is sent to a hosted service.</span></div>
+          <div className="privacy-strip"><ShieldCheck size={15}/><span>Files are processed locally.</span></div>
         </section>) : (<div className="page-stack">
           <div className="uploaded-file-card">
             <span className="uploaded-file-icon"><FileSpreadsheet size={18}/></span>
@@ -150,7 +150,7 @@ export default function UploadSplit() {
               </div>
               <span className="step-indicator"><span>02</span> of 03</span>
             </div>
-            <p className="muted-copy split-lead">This partition is stored once and reused by every model. Feature decisions happen after the split is fixed.</p>
+            <p className="muted-copy split-lead">The same saved split is used for every model.</p>
 
             <form className="split-form" onSubmit={onSplitSubmit}>
               <div className="form-grid">
@@ -169,7 +169,7 @@ export default function UploadSplit() {
                 <label className="field">
                   <span className="field-label">Random seed</span>
                   <input type="number" value={seed} onChange={(event) => { setSeed(event.target.value); setSplit(null); }}/>
-                  <small>Keep this fixed to reproduce the partition.</small>
+                  <small>Reuse this seed to reproduce the split.</small>
                 </label>
                 <label className="field">
                   <span className="field-label">Test partition</span>
@@ -179,7 +179,7 @@ export default function UploadSplit() {
                     <option value="0.3">30% of labelled rows</option>
                     <option value="0.4">40% of labelled rows</option>
                   </select>
-                  <small>Used only for the final model evaluation.</small>
+                  <small>Reserved for final evaluation.</small>
                 </label>
               </div>
               <div className="form-footer">
@@ -217,7 +217,6 @@ export default function UploadSplit() {
           </section>
         </div>)}
 
-      <div className="page-footnote"><ArrowDown size={14}/> Your choices are applied only after the split has been saved.</div>
     </div>);
 }
 function formatBytes(bytes) {

@@ -15,17 +15,12 @@ function formatValue(value) {
     return String(value);
 }
 export default function QualityReport({ report }) {
-    return (<section className="card quality-card" aria-labelledby="quality-title">
-      <div className="section-heading">
-        <div className="heading-with-icon">
-          <span className="heading-icon slate"><ClipboardList size={17}/></span>
-          <div>
-            <span className="section-kicker">TRANSPARENT BY DESIGN</span>
-            <h2 id="quality-title">Data quality report</h2>
-          </div>
-        </div>
-        <span className="quiet-tag">6 report sections</span>
-      </div>
+    return (<details className="card quality-card" aria-labelledby="quality-title">
+      <summary className="quality-summary">
+        <span className="heading-icon slate"><ClipboardList size={17}/></span>
+        <span><strong id="quality-title">Data quality</strong><small>{report.sections.length} checks</small></span>
+        <ChevronDown size={16} className="report-chevron"/>
+      </summary>
       <div className="report-sections">
         {report.sections.map((section) => (<details className="report-section" key={section.id}>
             <summary>
@@ -52,5 +47,5 @@ export default function QualityReport({ report }) {
           <strong>Items to review</strong>
           <ul>{report.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
         </div>)}
-    </section>);
+    </details>);
 }

@@ -1,4 +1,4 @@
-import { CircleHelp, Clock3, Layers3, Plus, ScanLine } from 'lucide-react';
+import { Clock3, Layers3, Plus, ScanLine } from 'lucide-react';
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import UploadSplit from './pages/UploadSplit';
 import ReviewSetup from './pages/ReviewSetup';
@@ -11,11 +11,11 @@ const navigation = [
 function Sidebar() {
     const location = useLocation();
     return (<aside className="sidebar">
-      <NavLink className="brand" to="/" aria-label="Model Disagreement Explorer home">
+      <NavLink className="brand" to="/" aria-label="ANTAR Model Disagreement Explorer home">
         <span className="brand-mark"><Layers3 size={25} strokeWidth={1.7}/></span>
         <span className="brand-copy">
-          <strong>MDE</strong>
-          <small>Model Disagreement<br />Explorer</small>
+          <strong>ANTAR</strong>
+          <small>Model Disagreement Explorer</small>
         </span>
       </NavLink>
 
@@ -32,13 +32,6 @@ function Sidebar() {
         })}
       </nav>
 
-      <div className="sidebar-bottom">
-        <div className="help-card">
-          <div className="help-heading"><CircleHelp size={15}/> About this workspace</div>
-          <p>Compare models on one held-out split. Inspect the cases where their predictions part ways.</p>
-        </div>
-        <div className="privacy-note"><span className="privacy-dot"/> Local workspace</div>
-      </div>
     </aside>);
 }
 function PageFrame() {
@@ -48,7 +41,7 @@ function PageFrame() {
         <header className="topbar">
           <div className="breadcrumb">
             <ScanLine size={15}/>
-            <span>ANALYSIS WORKSPACE</span>
+            <span>ANTAR <span className="topbar-divider">/</span> ANALYSIS</span>
           </div>
           <div className="topbar-right">
             <span className="local-indicator"><span className="privacy-dot"/> Private by design</span>

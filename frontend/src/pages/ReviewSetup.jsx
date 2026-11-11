@@ -113,8 +113,8 @@ export default function ReviewSetup() {
         <Link to="/" className="back-link"><ArrowLeft size={14}/> Dataset & split</Link>
         <div className="intro-row">
           <div>
-            <h1>Review before you run.</h1>
-            <p className="intro-copy">Feature checks use the training partition only. Your held-out test rows remain untouched.</p>
+            <h1>Review features</h1>
+            <p className="intro-copy">Diagnostics use training rows; test rows remain held out.</p>
           </div>
           <div className="intro-mark"><SlidersHorizontal size={21} strokeWidth={1.6}/></div>
         </div>
@@ -141,13 +141,13 @@ export default function ReviewSetup() {
           </div>
           <span className="quiet-tag">{report ? `${report.included.length} included` : 'Preparing report'}</span>
         </div>
-        <p className="muted-copy">Review columns that look like identifiers, dates, long text or contain no training values. Nothing is removed automatically without being reported.</p>
+        <p className="muted-copy">Resolve flagged columns before training.</p>
 
         <div className="review-controls">
           <label className="field token-field">
             <span className="field-label">Feature missing tokens <span className="optional">Optional</span></span>
             <input value={missingTokens} onChange={(event) => setMissingTokens(event.target.value)} placeholder="e.g. unknown, ?"/>
-            <small>Comma-separated, exact and case-sensitive after trimming.</small>
+            <small>Comma-separated; values are case-sensitive.</small>
           </label>
           <button type="button" className="button button-secondary update-button" onClick={refreshReport} disabled={updateMutation.isPending || initialQuery.isPending}>
             {updateMutation.isPending ? <RefreshCw size={15} className="spin"/> : <RefreshCw size={15}/>}
@@ -157,12 +157,12 @@ export default function ReviewSetup() {
 
         {initialQuery.isPending ? (<div className="loading-inline"><span className="spinner"/> Computing train-only diagnostics…</div>) : report ? (<>
             <div className="flag-section">
-              <div className="subsection-title"><strong>Flagged columns</strong><span>Review recommendations before continuing</span></div>
+              <div className="subsection-title"><strong>Flagged columns</strong><span>Review before continuing</span></div>
               <FlagList flags={report.flags} undecided={report.undecided}/>
             </div>
             {Object.entries(report.flags).some(([, info]) => info.flag && info.default_decision === 'undecided') && (<div className="decision-panel">
                 <div className="decision-panel-heading">
-                  <div><strong>Columns that need your decision</strong><span>Whole-number identifiers can be useful or misleading. Choose explicitly.</span></div>
+                  <div><strong>Columns needing a decision</strong><span>Choose whether each column should be used.</span></div>
                   {requiredDecisions.length > 0 && <span className="count-badge">{requiredDecisions.length} open</span>}
                 </div>
                 {Object.entries(report.flags)
@@ -180,7 +180,7 @@ export default function ReviewSetup() {
                     </fieldset>))}
               </div>)}
             {Object.entries(report.flags).some(([, info]) => info.flag && info.default_decision === 'exclude' && info.flag !== 'all_missing') && (<div className="override-panel">
-                <div className="subsection-title"><strong>Default exclusions</strong><span>These can be included if you have a reason to keep them.</span></div>
+                <div className="subsection-title"><strong>Excluded by default</strong><span>Include only if appropriate.</span></div>
                 {Object.entries(report.flags)
                     .filter(([, info]) => info.flag && info.default_decision === 'exclude' && info.flag !== 'all_missing')
                     .map(([name, info]) => (<label className="override-row" key={name}>
@@ -208,7 +208,7 @@ export default function ReviewSetup() {
           </div>
           <span className={`model-count${modelCountValid ? '' : ' invalid'}`}>{models.length} of 4 selected</span>
         </div>
-        <p className="muted-copy">The Dummy baseline is always included. Select two to four additional models; all share the same split and feature decisions.</p>
+        <p className="muted-copy">Dummy is included automatically. Select two to four models; all use the same split.</p>
         {selectableModels.isPending ? (<div className="loading-inline"><span className="spinner"/> Loading model registry…</div>) : selectableModels.error ? (<StatusBanner error={selectableModels.error} tone="error"/>) : (<div className="model-grid">
             {availableModels.map((model) => {
                 const checked = models.includes(model.key);
@@ -232,7 +232,7 @@ export default function ReviewSetup() {
       <div className="start-panel">
         <div className="start-explanation">
           <span className="start-icon"><CircleHelp size={17}/></span>
-          <div><strong>Ready when your review is complete</strong><small>{startHint ?? 'Preprocessing will be fitted on training rows only.'}</small></div>
+          <div><strong>Ready to run</strong><small>{startHint ?? 'Preprocessing uses training rows only.'}</small></div>
         </div>
         <button type="button" className="button button-primary start-button" onClick={handleStart} disabled={!canStart}>
           {runMutation.isPending ? <RefreshCw size={15} className="spin"/> : null}
