@@ -42,19 +42,22 @@ def slice_table(feature, kind, y, pa, pb):
 
     missing_mask = feature.isna()
     if missing_mask.any():
-        metrics = _slice_metrics(feature.where(~missing_mask, np.nan), y, pa, pb)
+        missing_values = missing_mask.to_numpy()
+        missing_y = y[missing_values]
+        missing_pa = pa[missing_values]
+        missing_pb = pb[missing_values]
         rows.append({
             "label": "missing",
-            "n": int(missing_mask.sum()),
-            "acc_a": float(np.mean(pa[missing_mask] == y[missing_mask])) if missing_mask.sum() else 0.0,
-            "acc_b": float(np.mean(pb[missing_mask] == y[missing_mask])) if missing_mask.sum() else 0.0,
-            "b": int(np.sum((pa[missing_mask] == y[missing_mask]) & (pb[missing_mask] != y[missing_mask]))),
-            "c": int(np.sum((pb[missing_mask] == y[missing_mask]) & (pa[missing_mask] != y[missing_mask]))),
-            "disagreements": int(np.sum(pa[missing_mask] != pb[missing_mask])) if missing_mask.sum() else 0,
-            "disagreement_rate": float(np.mean(pa[missing_mask] != pb[missing_mask])) if missing_mask.sum() else 0.0,
-            "wilson_low": wilson(int(np.sum(pa[missing_mask] != pb[missing_mask])), int(missing_mask.sum()))["low"]["value"],
-            "wilson_high": wilson(int(np.sum(pa[missing_mask] != pb[missing_mask])), int(missing_mask.sum()))["high"]["value"],
-            "low_support": bool(missing_mask.sum() < 30 or np.sum(pa[missing_mask] != pb[missing_mask]) < 5),
+            "n": int(len(missing_y)),
+            "acc_a": float(np.mean(missing_pa == missing_y)),
+            "acc_b": float(np.mean(missing_pb == missing_y)),
+            "b": int(np.sum((missing_pa == missing_y) & (missing_pb != missing_y))),
+            "c": int(np.sum((missing_pb == missing_y) & (missing_pa != missing_y))),
+            "disagreements": int(np.sum(missing_pa != missing_pb)),
+            "disagreement_rate": float(np.mean(missing_pa != missing_pb)),
+            "wilson_low": wilson(int(np.sum(missing_pa != missing_pb)), len(missing_y))["low"]["value"],
+            "wilson_high": wilson(int(np.sum(missing_pa != missing_pb)), len(missing_y))["high"]["value"],
+            "low_support": bool(len(missing_y) < 30 or np.sum(missing_pa != missing_pb) < 5),
         })
 
     valid = feature[~missing_mask]
@@ -98,9 +101,9 @@ def slice_table(feature, kind, y, pa, pb):
         return rows
     for label in labels:
         if label == "Other":
-            mask = valid.isin(counts.index[8:]) if len(counts) > 8 else pd.Series(False, index=valid.index)
+            mask = feature.isin(counts.index[8:]) if len(counts) > 8 else pd.Series(False, index=feature.index)
         else:
-            mask = valid == label
+            mask = feature == label
         mask = mask.fillna(False)
         idx = np.asarray(mask.to_numpy())
         n = int(np.sum(idx))

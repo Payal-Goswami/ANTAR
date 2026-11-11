@@ -3,7 +3,9 @@ from __future__ import annotations
 import hashlib
 import shutil
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Body, File, Form, Request, UploadFile
 from fastapi.responses import JSONResponse
@@ -122,6 +124,16 @@ async def upload(
         part_path.replace(final_path)
         header = read_header(final_path, request.app.state.settings.max_cols)
         profile = profile_frame(final_path)
+        store.save_upload_metadata(
+            upload_id,
+            {
+                "upload_id": upload_id,
+                "display_filename": filename,
+                "fingerprint": digest,
+                "size_bytes": size,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            },
+        )
         return JSONResponse(
             {
                 "upload_id": upload_id,
@@ -137,6 +149,7 @@ async def upload(
     except Exception:
         final_path.unlink(missing_ok=True)
         part_path.unlink(missing_ok=True)
+        store.upload_metadata_path(upload_id).unlink(missing_ok=True)
         raise
 
 

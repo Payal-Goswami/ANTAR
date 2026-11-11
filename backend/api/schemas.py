@@ -18,3 +18,15 @@ class PreflightRequest(BaseModel):
     split_id: str
     missing_tokens: list[str] = Field(default_factory=list)
     column_decisions: dict[str, str] = Field(default_factory=dict)
+
+
+class RunRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    upload_id: str
+    split_id: str
+    missing_tokens: list[str] = Field(default_factory=list)
+    column_decisions: dict[str, str] = Field(default_factory=dict)
+    models: list[str]
+    class_weight: bool = False
+    independence_confirmed: bool = False

@@ -72,7 +72,15 @@ def pair_stats(y, pa, pb, n_classes):
 
 
 def all_pairs(y, preds):
-    model_keys = [key for key in preds if preds.get(key, {}).get("status") == "done" and key != "dummy"]
+    registry_order = ["logreg", "tree", "rf", "xgb"]
+    model_keys = [
+        key for key in registry_order
+        if key in preds and preds.get(key, {}).get("status") == "done"
+    ]
+    model_keys.extend(
+        key for key, result in preds.items()
+        if key not in {*registry_order, "dummy"} and result.get("status") == "done"
+    )
     entries = []
     raw_p_values = []
     for left, right in combinations(model_keys, 2):
@@ -157,10 +165,13 @@ def disagreement_rows(features, y_true, preds, proba, class_names, a, b, bucket=
             continue
         feature_values = {}
         for col_name, value in frame.iloc[row_index].items():
+            if col_name == "row_id":
+                continue
             feature_values[col_name] = None if pd.isna(value) else value
+        stored_row_id = frame.iloc[row_index].get("row_id", row_index)
         rows.append(
             {
-                "row_id": int(row_index),
+                "row_id": int(stored_row_id),
                 "features": feature_values,
                 "y_true": int(actual),
                 "pred_a": int(first),

@@ -33,3 +33,16 @@ def test_categorical_slice_table_uses_top_values_and_other_bucket():
     non_missing = [row for row in rows if row["label"] != "missing"]
     assert len(non_missing) == 9
     assert any(row["label"] == "Other" for row in non_missing)
+
+
+def test_categorical_slice_masks_stay_aligned_when_values_are_missing():
+    feature = pd.Series(["a", None, "b", "a", None, "b"])
+    y = np.array([0, 0, 1, 0, 1, 1])
+    pa = np.array([0, 1, 1, 0, 0, 1])
+    pb = np.array([1, 1, 0, 0, 1, 1])
+    rows = slice_table(feature, "categorical", y, pa, pb)
+    assert sum(row["n"] for row in rows) == len(feature)
+    by_label = {row["label"]: row for row in rows}
+    assert by_label["missing"]["n"] == 2
+    assert by_label["a"]["n"] == 2
+    assert by_label["b"]["n"] == 2
