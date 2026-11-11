@@ -14,3 +14,9 @@
 - Pairwise model comparison is a disagreement problem: the information lives in discordant rows, not in overall accuracy alone.
 - McNemar's exact test is the right check for paired predictions because each row is a paired observation with two models.
 - Holm adjustment protects the family-wise error rate when comparing multiple model pairs, while Wilson intervals communicate uncertainty for small slice sizes.
+
+## Day 6
+- Uploads are streamed to a temporary file so size limits and SHA-256 fingerprints are enforced without keeping the whole file in memory.
+- Validate opaque IDs before constructing filesystem paths; a UUID-shaped ID is part of path safety, not just formatting.
+- Preflight is deterministic from the upload, saved split, and explicit feature choices, so it can be recomputed rather than stored as stale state.
+- Keep API errors in one `{code, message, details}` envelope so clients can handle validation and domain failures consistently.

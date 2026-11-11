@@ -6,3 +6,8 @@ xgboost
 pyarrow
 pytest
 statsmodels
+fastapi
+uvicorn
+python-multipart
+pydantic
+httpx

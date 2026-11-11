@@ -135,13 +135,30 @@ def resolve_columns(
     decisions: dict[str, str] | None = None,
     target_column: str | None = None,
 ) -> dict[str, list[str]]:
-    if target_column is not None and target_column in (decisions or {}):
+    normalized = decisions or {}
+    if target_column is not None and target_column in normalized:
         raise BadRequest(
             "The target column cannot be included in feature decisions.",
-            {"target_column": target_column, "decision": decisions[target_column]},
+            {"target_column": target_column, "decision": normalized[target_column]},
         )
 
-    normalized = decisions or {}
+    unknown_columns = sorted(set(normalized) - set(feature_flags))
+    if unknown_columns:
+        raise BadRequest(
+            "A feature decision names an unknown column.",
+            {"unknown_columns": unknown_columns},
+        )
+    invalid_decisions = {
+        column: decision
+        for column, decision in normalized.items()
+        if not isinstance(decision, str) or decision not in {"include", "exclude"}
+    }
+    if invalid_decisions:
+        raise BadRequest(
+            "Feature decisions must be 'include' or 'exclude'.",
+            {"invalid_decisions": invalid_decisions},
+        )
+
     included: list[str] = []
     excluded: list[str] = []
     undecided: list[str] = []
@@ -184,6 +201,20 @@ def duplicate_report(
     feature_columns: Iterable[str] | None = None,
 ) -> dict:
     columns = list(feature_columns) if feature_columns is not None else list(train_df.columns)
+    if not columns:
+        return {
+            "status": "not_applicable",
+            "reason": "no_feature_columns",
+            "repeated_rows": "not_applicable",
+            "repeated_row_share": "not_applicable",
+            "conflicting_groups": "not_applicable",
+            "conflicting_group_rows": [],
+            "agreement_ceiling": "not_applicable",
+            "test_rows_matched": "not_applicable",
+            "test_rows_consistent": "not_applicable",
+            "test_rows_conflicting": "not_applicable",
+        }
+
     train_pairs = train_df[columns].copy()
     repeats: dict[tuple, list[int]] = defaultdict(list)
 

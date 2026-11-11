@@ -16,6 +16,8 @@ def build_quality_report(
     decisions: dict[str, str] | None = None,
     target_column: str | None = None,
     missing_tokens: dict[str, Iterable[str]] | None = None,
+    typing_report: dict[str, dict] | None = None,
+    feature_columns: Iterable[str] | None = None,
 ) -> dict:
     if feature_flags is None:
         feature_flags = detect_feature_flags(train_df, target_column)
@@ -25,6 +27,7 @@ def build_quality_report(
         target_series=labelled_set.y.loc[train_df.index],
         test_df=test_df,
         test_target_series=labelled_set.y.loc[test_df.index],
+        feature_columns=feature_columns,
     )
 
     sections = [
@@ -62,7 +65,7 @@ def build_quality_report(
                 {
                     "kind": "info",
                     "message": "Feature typing flags",
-                    "data": feature_flags,
+                    "data": typing_report if typing_report is not None else feature_flags,
                 }
             ],
         },
