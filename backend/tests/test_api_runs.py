@@ -217,3 +217,73 @@ def test_run_errors_are_consistent_and_models_validate(client):
 
     bad_pair = client.get("/api/runs/not-a-uuid/pairs")
     assert assert_error_shape(bad_pair, 404)["code"] == "not_found"
+
+
+def test_multiclass_disagreement_filter_returns_both_wrong_different_labels(client):
+    store = client.app.state.store
+    run_id = "a" * 32
+    store.create_run(run_id)
+    store.write_run_json(
+        run_id,
+        "config.json",
+        {
+            "run_id": run_id,
+            "class_names": ["zero", "one", "two"],
+            "feature_columns": [{"name": "feature", "kind": "numeric"}],
+            "probability_columns": {},
+        },
+    )
+    store.write_run_json(
+        run_id,
+        "status.json",
+        {
+            "state": "completed",
+            "models": {
+                "logreg": {"status": "done"},
+                "rf": {"status": "done"},
+            },
+        },
+    )
+    store.write_parquet(
+        run_id,
+        "predictions.parquet",
+        pd.DataFrame(
+            {
+                "y_true": [0, 1, 2],
+                "pred_logreg": [1, 1, 0],
+                "pred_rf": [2, 1, 0],
+            }
+        ),
+    )
+    store.write_parquet(
+        run_id,
+        "test_features.parquet",
+        pd.DataFrame({"row_id": [10, 20, 30], "feature": [1.0, 2.0, 3.0]}),
+    )
+
+    response = client.get(
+        f"/api/runs/{run_id}/disagreements",
+        params={
+            "a": "logreg",
+            "b": "rf",
+            "bucket": "both_wrong_diff",
+            "page": 1,
+            "page_size": 25,
+        },
+    )
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["total"] == 1
+    assert result["rows"] == [
+        {
+            "row_id": 10,
+            "features": {"feature": 1.0},
+            "y_true": "zero",
+            "pred_a": "one",
+            "pred_b": "two",
+            "prob_a": None,
+            "prob_b": None,
+            "bucket": "both_wrong_diff",
+        }
+    ]

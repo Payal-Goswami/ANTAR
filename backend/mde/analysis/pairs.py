@@ -97,6 +97,7 @@ def all_pairs(y, preds):
             "disagreement_rate": stats["disagreement_rate"],
             "per_true_class": stats["per_true_class"],
             "kappa": stats["kappa"],
+            "kappa_stat": stats["kappa_stat"],
             "accuracy_a": stats["accuracy_a"],
             "accuracy_b": stats["accuracy_b"],
             "accuracy_diff": stats["accuracy_diff"],

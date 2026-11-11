@@ -50,5 +50,6 @@ def test_all_pairs_ignores_dummy_and_holms_are_monotone():
     assert len(pairs) == 3
     assert all(item["model_a"] != "dummy" and item["model_b"] != "dummy" for item in pairs)
     assert all(item["p_holm"] >= item["p_raw"] for item in pairs)
+    assert all("kappa_stat" in item for item in pairs)
 
     json.dumps({"pairs": pairs}, allow_nan=False)
