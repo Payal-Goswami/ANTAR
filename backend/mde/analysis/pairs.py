@@ -168,7 +168,12 @@ def disagreement_rows(features, y_true, preds, proba, class_names, a, b, bucket=
         for col_name, value in frame.iloc[row_index].items():
             if col_name == "row_id":
                 continue
-            feature_values[col_name] = None if pd.isna(value) else value
+            if pd.isna(value):
+                feature_values[col_name] = None
+            elif isinstance(value, np.generic):
+                feature_values[col_name] = value.item()
+            else:
+                feature_values[col_name] = value
         stored_row_id = frame.iloc[row_index].get("row_id", row_index)
         rows.append(
             {

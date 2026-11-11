@@ -28,7 +28,7 @@ def test_multiclass_pair_stats_and_disagreement_rows_include_both_wrong_diff():
     assert result["buckets"]["both_wrong_diff"] == 1
     assert result["disagreement_count"] == 1
 
-    features = pd.DataFrame({"x": [10, 20, 30, 40], "y": [1, 2, 3, 4]})
+    features = pd.DataFrame({"x": [10, 20, 30, 40], "category": ["a", "b", "c", "d"]})
     proba = {
         "a": np.array([[0.1, 0.8, 0.1], [0.2, 0.7, 0.1], [0.7, 0.2, 0.1], [0.8, 0.1, 0.1]]),
         "b": np.array([[0.1, 0.1, 0.8], [0.2, 0.7, 0.1], [0.7, 0.2, 0.1], [0.8, 0.1, 0.1]]),
@@ -36,6 +36,7 @@ def test_multiclass_pair_stats_and_disagreement_rows_include_both_wrong_diff():
     rows = disagreement_rows(features, y, {"a": pa, "b": pb}, proba, ["zero", "one", "two"], "a", "b")
     assert rows["total"] == 1
     assert rows["rows"][0]["bucket"] == "both_wrong_diff"
+    json.dumps(rows, allow_nan=False)
 
 
 def test_all_pairs_ignores_dummy_and_holms_are_monotone():
