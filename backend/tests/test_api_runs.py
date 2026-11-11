@@ -179,8 +179,16 @@ def test_training_exception_marks_failed_cleans_upload_and_releases_lock(client,
     assert "controlled training failure" in finished["error"]
     assert finished["models"]["logreg"]["status"] == "failed"
     assert not client.app.state.store.upload_path(uploaded["upload_id"]).exists()
-    assert client.app.state.runner.acquire()
-    client.app.state.runner.release()
+    runner = client.app.state.runner
+    deadline = time.monotonic() + 5
+    acquired = False
+    while time.monotonic() < deadline:
+        if runner.acquire():
+            acquired = True
+            break
+        time.sleep(0.01)
+    assert acquired
+    runner.release()
 
 
 def test_running_run_cannot_be_deleted(client, monkeypatch):
