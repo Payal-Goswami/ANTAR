@@ -1,15 +1,6 @@
-import { FileSpreadsheet } from 'lucide-react'
-import type { ProfileColumn } from '../api'
-
-type Props = {
-  columns: ProfileColumn[]
-  rows: number
-  totalColumns: number
-}
-
-export default function ProfileTable({ columns, rows, totalColumns }: Props) {
-  return (
-    <section className="card profile-card" aria-labelledby="profile-title">
+import { FileSpreadsheet } from 'lucide-react';
+export default function ProfileTable({ columns, rows, totalColumns }) {
+    return (<section className="card profile-card" aria-labelledby="profile-title">
       <div className="section-heading">
         <div>
           <span className="section-kicker">FILE OVERVIEW</span>
@@ -17,7 +8,7 @@ export default function ProfileTable({ columns, rows, totalColumns }: Props) {
         </div>
         <div className="profile-summary">
           <span><strong>{rows.toLocaleString()}</strong> rows</span>
-          <span className="summary-separator" />
+          <span className="summary-separator"/>
           <span><strong>{totalColumns}</strong> columns</span>
         </div>
       </div>
@@ -27,17 +18,14 @@ export default function ProfileTable({ columns, rows, totalColumns }: Props) {
             <tr><th>Column</th><th>Inferred type</th><th>Missing</th></tr>
           </thead>
           <tbody>
-            {columns.map((column) => (
-              <tr key={column.name}>
-                <td><span className="column-name"><FileSpreadsheet size={14} />{column.name}</span></td>
+            {columns.map((column) => (<tr key={column.name}>
+                <td><span className="column-name"><FileSpreadsheet size={14}/>{column.name}</span></td>
                 <td><span className={`type-pill ${column.kind === 'numeric' ? 'numeric' : 'categorical'}`}>{column.kind}</span></td>
                 <td>{column.missing_pct.toFixed(2)}%</td>
-              </tr>
-            ))}
+              </tr>))}
           </tbody>
         </table>
       </div>
       <p className="table-footnote">Types are inferred from the full file for schema reporting. The profile does not make feature-selection decisions.</p>
-    </section>
-  )
+    </section>);
 }
