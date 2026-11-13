@@ -44,7 +44,7 @@ function PageFrame() {
             <span>ANTAR <span className="topbar-divider">/</span> ANALYSIS</span>
           </div>
           <div className="topbar-right">
-            <span className="local-indicator"><span className="privacy-dot"/> Private by design</span>
+            <span className="local-indicator"><span className="privacy-dot"/>By Payal Goswami</span>
           </div>
         </header>
         <div className="page-content">

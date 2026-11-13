@@ -137,7 +137,7 @@ export default function UploadSplit() {
               <span>{uploaded.n_rows.toLocaleString()} rows <i /> {uploaded.n_cols} columns <i /> {formatBytes(uploaded.size_bytes)}</span>
             </div>
             <span className="file-ready"><Check size={14}/> Ready</span>
-            <button type="button" className="text-button" onClick={() => { setUploaded(null); setSplit(null); setError(null); }}>Replace file</button>
+            <button type="button" className="text-button" onClick={() => { setUploaded(null); setSplit(null); setError(null); }}>REPLACE FILE</button>
           </div>
 
           <ProfileTable columns={uploaded.profile.columns} rows={uploaded.n_rows} totalColumns={uploaded.n_cols}/>

@@ -65,16 +65,20 @@ def slice_table(feature, kind, y, pa, pb):
         return rows
 
     if kind == "numeric":
-        bins = pd.qcut(valid, q=5, duplicates="drop")
+        bins = pd.qcut(valid, q=5, duplicates="drop", precision=4)
         if bins.nunique() <= 1:
             bins = pd.Series(["all"] * len(valid), index=valid.index)
-        label_values = bins.astype(str)
-        for label, group in valid.groupby(label_values, sort=False):
+            intervals = ["all"]
+        else:
+            intervals = bins.cat.categories
+        for interval in intervals:
+            group_mask = bins == interval
+            group = valid[group_mask]
             group_index = group.index
             ids = feature.index.isin(group_index)
             metrics = _slice_metrics(pd.Series(np.where(ids, feature, np.nan), index=feature.index), y, pa, pb)
             row = {
-                "label": str(label),
+                "label": str(interval),
                 "n": int(np.sum(ids)),
                 "acc_a": metrics["acc_a"],
                 "acc_b": metrics["acc_b"],

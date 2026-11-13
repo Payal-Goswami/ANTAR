@@ -23,6 +23,24 @@ def test_numeric_slice_table_handles_repeated_values_and_missing():
     json.dumps({"rows": rows}, allow_nan=False)
 
 
+def test_numeric_slice_table_sorts_low_to_high_and_rounds_labels():
+    feature = pd.Series([5.432198, 1.123456, 4.321987, 2.234567, 3.345678])
+    y = np.array([0, 0, 0, 0, 0])
+    predictions = np.array([0, 0, 0, 0, 0])
+
+    rows = slice_table(feature, "numeric", y, predictions, predictions)
+    labels = [row["label"] for row in rows]
+    lower_bounds = [float(label[1:].split(",")[0]) for label in labels]
+    decimal_places = [
+        len(endpoint.split(".")[-1])
+        for label in labels
+        for endpoint in label[1:-1].split(", ")
+    ]
+
+    assert lower_bounds == sorted(lower_bounds)
+    assert all(3 <= places <= 4 for places in decimal_places)
+
+
 def test_categorical_slice_table_uses_top_values_and_other_bucket():
     values = [f"v{i}" for i in range(12)] * 3
     feature = pd.Series(values)
