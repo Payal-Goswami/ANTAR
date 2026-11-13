@@ -9,10 +9,10 @@ ANTAR is a local tool for comparing classification models on the same held-out r
 Install Docker Desktop, then from the repository root:
 
 ```powershell
-docker compose up --build
+docker compose up
 ```
 
-Open [http://127.0.0.1:8080](http://127.0.0.1:8080). The built-in Breast Cancer sample is a quick binary-classification demo. Stop the services with `Ctrl+C`; run `docker compose down` to remove the containers. Run files persist in the ignored `data/` directory across restarts.
+Open [http://127.0.0.1:8080](http://127.0.0.1:8080). The built-in Breast Cancer sample is a quick binary-classification demo. Backend source is mounted into the container and reloads on edits, so code-only changes do not require rebuilding the image. Use `docker compose up --build` after changing backend dependencies or the Dockerfile. Stop the services with `Ctrl+C`; run `docker compose down` to remove the containers. Run files persist in the ignored `data/` directory across restarts.
 
 The backend is not published as a host port. Nginx serves the frontend and proxies `/api/` over Compose's private network. The browser port is bound to loopback only. Do not expose this unauthenticated, local-only app to an untrusted network.
 

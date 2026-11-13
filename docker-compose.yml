@@ -4,11 +4,27 @@ services:
   backend:
     build:
       context: ./backend
+    command:
+      - uvicorn
+      - api.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --workers
+      - "1"
+      - --reload
+      - --reload-dir
+      - /app/api
+      - --reload-dir
+      - /app/mde
     environment:
       MDE_DATA_DIR: /app/data
       MDE_N_JOBS: "1"
     volumes:
       - ./data:/app/data
+      - ./backend/api:/app/api
+      - ./backend/mde:/app/mde
     healthcheck:
       test:
         - CMD

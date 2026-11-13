@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM python:3.11.9-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -7,7 +8,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.lock .
-RUN python -m pip install --no-cache-dir --no-deps -r requirements.lock
+RUN --mount=type=cache,target=/root/.cache/pip \
+    python -m pip install --no-deps --retries 10 --timeout 600 -r requirements.lock
 
 COPY api ./api
 COPY mde ./mde
