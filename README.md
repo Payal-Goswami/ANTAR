@@ -46,7 +46,7 @@ npm install
 npm run dev
 ```
 
-Tests: `cd backend && pytest` ([N] tests).
+Tests: `cd backend && pytest`
 
 ## How to use it
 
@@ -109,7 +109,7 @@ The datasets are not in this repo. Check each dataset's terms before sharing the
 
 Python, FastAPI, scikit-learn, XGBoost, pandas, SciPy, React, Docker, pytest.
 
-###Tested On
+### Tested On
 - CPU: Intel Core i3-10110U @ 2.10 GHz
 - RAM: 8 GB (7.84 GB usable)
 - OS: Windows 11 Home Single Language, 64-bit (Version 25H2)
