@@ -4,7 +4,7 @@ A small tool that compares classification models on a CSV file and shows the row
 
 Two models can have the same accuracy and still make mistakes on different rows. This tool shows those rows and checks whether the difference is real or just chance. It does not pick a model for you. It gives you evidence to choose with.
 
-![Results page](docs/screenshots/results.png)
+![Results page](docs/screenshots/result_image.png)
 
 ## What I found
 
