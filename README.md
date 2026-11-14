@@ -1,8 +1,8 @@
 # Model Disagreement Explorer (ANTAR)
 
-A small tool that compares classification models on a CSV file and shows the rows where they disagree.
+A lightweight tool that trains and compares classification models on CSV datasets, highlighting the rows where their predictions disagree.
 
-Two models can have the same accuracy and still make mistakes on different rows. This tool shows those rows and checks whether the difference is real or just chance. It does not pick a model for you. It gives you evidence to choose with.
+Two models can achieve the same accuracy while making mistakes on different rows. ANTAR reveals these disagreements and uses statistical tests to assess whether observed performance differences are meaningful or could be due to chance. It does not pick a model for you. It gives you evidence to choose with.
 
 ![Results page](docs/screenshots/result_image.png)
 
