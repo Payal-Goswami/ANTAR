@@ -11,7 +11,7 @@ Two models can have the same accuracy and still make mistakes on different rows.
 I ran it on three public datasets (seed 42, 20% test rows).
 
 - **Adult Census Income:** logistic regression and random forest differ by only 0.8 points in accuracy (not significant, Holm p = 0.12), but they give different answers on 9.3% of the test rows. XGBoost was the best: accuracy 0.869, macro-F1 0.811.
-- **Bank Marketing:** the `duration` column is only known after the phone call, so I ran the data with and without it. Dropping it cut XGBoost's ROC-AUC from 0.928 to 0.765. Without it, every real model has accuracy 0.888 to 0.889, which is almost the same as always guessing "no" (0.883). Accuracy alone makes the models look useless. ROC-AUC and macro-F1 show there is still some signal.
+- **Bank Marketing:** the `duration` column is only known after the phone call, so I ran the data with and without it. Dropping it cut XGBoost's ROC-AUC from 0.928 to 0.765. Without `duration`, Logistic Regression, Random Forest and XGBoost achieved 0.888-0.889 accuracy, close to the 0.883 majority-class baseline, while Decision Tree achieved 0.830. Macro-F1 and ROC-AUC showed that the other models captured useful predictive signal beyond the majority-class baseline.
 - **Wine:** the multiclass case works, but the test set has only 36 rows, so I make no claim about which model is better.
 
 ## What it does
@@ -103,6 +103,7 @@ Both Bank runs use exactly the same test rows. I only removed `duration`, and on
 - Adult: Becker and Kohavi, UCI Machine Learning Repository, https://doi.org/10.24432/C5XW20
 - Bank Marketing: UCI Machine Learning Repository, https://archive.ics.uci.edu/dataset/222/bank
 - Wine and Breast Cancer Wisconsin (the built-in sample): from scikit-learn, https://archive.ics.uci.edu/dataset/109/wine
+  
 The datasets are not in this repo. Check each dataset's terms before sharing the files.
 
 ## Built with
