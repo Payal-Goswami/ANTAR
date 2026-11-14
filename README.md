@@ -1,89 +1,118 @@
-# ANTAR — Model Disagreement Explorer
+# Model Disagreement Explorer (ANTAR)
 
-ANTAR is a local tool for comparing classification models on the same held-out rows. It reports performance, paired prediction disagreements, and the feature slices where models differ. It is an exploratory aid, not AutoML or a claim that one model is universally best.
+A small tool that compares classification models on a CSV file and shows the rows where they disagree.
 
-![ANTAR results page using the bundled Breast Cancer sample](docs/results-sample.png)
+Two models can have the same accuracy and still make mistakes on different rows. This tool shows those rows and checks whether the difference is real or just chance. It does not pick a model for you. It gives you evidence to choose with.
 
-## Run locally with Docker
+![Results page](docs/screenshots/results.png)
 
-Install Docker Desktop, then from the repository root:
+## What I found
 
-```powershell
-docker compose up
+I ran it on three public datasets (seed 42, 20% test rows).
+
+- **Adult Census Income:** logistic regression and random forest differ by only 0.8 points in accuracy (not significant, Holm p = 0.12), but they give different answers on 9.3% of the test rows. XGBoost was the best: accuracy 0.869, macro-F1 0.811.
+- **Bank Marketing:** the `duration` column is only known after the phone call, so I ran the data with and without it. Dropping it cut XGBoost's ROC-AUC from 0.928 to 0.765. Without it, every real model has accuracy 0.888 to 0.889, which is almost the same as always guessing "no" (0.883). Accuracy alone makes the models look useless. ROC-AUC and macro-F1 show there is still some signal.
+- **Wine:** the multiclass case works, but the test set has only 36 rows, so I make no claim about which model is better.
+
+## What it does
+
+1. Upload a CSV (up to 20 MB) and pick the column to predict.
+2. Make one train/test split and save it, so every model is tested on exactly the same rows.
+3. Train Logistic Regression, Decision Tree, Random Forest and XGBoost with default settings, plus a baseline that always predicts the most common class.
+4. Show accuracy, macro precision, recall and F1, and ROC-AUC. For every pair of models, show how often they disagree, McNemar's exact test (with Holm correction) and Cohen's kappa.
+5. List the rows where two models disagree, and show which feature ranges have more disagreement.
+
+## Run it
+
+With Docker:
+
+```
+docker compose up --build
 ```
 
-Open [http://127.0.0.1:8080](http://127.0.0.1:8080). The built-in Breast Cancer sample is a quick binary-classification demo. Backend source is mounted into the container and reloads on edits, so code-only changes do not require rebuilding the image. Use `docker compose up --build` after changing backend dependencies or the Dockerfile. Stop the services with `Ctrl+C`; run `docker compose down` to remove the containers. Run files persist in the ignored `data/` directory across restarts.
+Then open http://127.0.0.1:8080
 
-The backend is not published as a host port. Nginx serves the frontend and proxies `/api/` over Compose's private network. The browser port is bound to loopback only. Do not expose this unauthenticated, local-only app to an untrusted network.
+Without Docker:
 
-## Demo datasets
+```
+cd backend
+python -m venv .venv
+source .venv/bin/activate        # on Windows: .venv\Scripts\activate
+pip install -r requirements.lock
+uvicorn api.main:app --reload
 
-- **Binary:** the built-in Breast Cancer sample.
-- **Multiclass:** the Wine dataset from `sklearn.datasets.load_wine`; export it as a CSV with `target` as the label.
-- **Real data:** UCI Adult (Census Income), which has numeric and categorical features and missing values. Use `?` as an explicit feature-missing token; the app does not guess missing-value markers.
-
-The UCI datasets are not bundled. The Adult source is [UCI's dataset page](https://archive.ics.uci.edu/dataset/2/adult), DOI [10.24432/C5XW20](https://doi.org/10.24432/C5XW20). Check the source page for attribution and reuse terms. Local uploads and generated run records are excluded from Git.
-
-## Architecture
-
-```text
-Browser → Nginx (static React app; /api proxy)
-                    ↓
-          FastAPI (one Uvicorn worker)
-                    ↓
-          Python analysis core
-          ├── CSV profile, split, train-only diagnostics
-          ├── model pipelines and paired statistics
-          └── file-backed runs and one background worker
+cd frontend                      # in a second terminal
+npm install
+npm run dev
 ```
 
-## Design choices
+Tests: `cd backend && pytest` ([N] tests).
 
-- Persist the reviewed split so all models use identical test-row IDs.
-- Fit imputers, encoders, and scaling inside model pipelines on training rows only.
-- Keep missing-value tokens explicit; a label such as `NA` is not silently discarded.
-- Report duplicates and conflicting labels instead of altering the input.
-- Require a user decision for suspicious integer identifiers.
-- Use exact McNemar tests and Holm adjustment for model-pair comparisons.
-- Treat slices as exploratory and show low-support warnings.
-- Use one worker and a non-blocking lock; reject a second run rather than queue it.
+## How to use it
 
-## Findings and measurements
+1. Open **New analysis**, drop your CSV or press **Try the sample**.
+2. Check the profile. If you see only one column, your file probably uses `;` instead of commas.
+3. Choose the target column, a seed and a test size, then **Create split**.
+4. In **Review features**, look at any flagged columns and the data quality report.
+5. Pick 2 to 4 models and press **Start comparison**.
 
-On a 4,000-row UCI Adult extract with 554 explicit `?` markers, logistic regression and random forest each reached 0.84375 accuracy; the decision tree reached 0.81500. With an 800-row held-out set, the decision-tree/random-forest exact McNemar p-value was 0.034615, but its Holm-adjusted value was 0.103846. No model pair was significant after Holm adjustment at 0.05. This is one split, not evidence that the models are equivalent. The full protocol and the separate Covertype results are in [the findings report](docs/findings-draft.md).
+## How it works
 
-The following local `TestClient` timings are workflow measurements, not production benchmarks:
+- The split is made first and saved. Anything the tool learns from the data (which columns look like IDs, medians for filling gaps, scaling) comes from the training rows only. The test rows are never used for any decision.
+- Missing numbers get the median, missing text gets the most common value, text columns are one-hot encoded (at most 20 categories per column), and only logistic regression is scaled.
+- The tool never cleans data silently. Everything it changes is listed in the data quality report. Only empty cells count as missing; values like `NA` stay as text unless you list them as missing.
+- McNemar's test only looks at rows where exactly one of the two models is right, because the other rows say nothing about which model is better. Holm correction is used because several pairs are tested at once. Slice rates come with Wilson confidence intervals.
 
-| Adult workflow step | Time |
-|---|---:|
-| Upload and profile | 0.249 s |
-| Split | 0.244 s |
-| Complete run | 5.724 s |
+## Results
 
-Compose API timings and the briefly sampled memory observation are in the findings report, with their limitations. Measurements were taken on Windows 11 Home Single Language, Intel Core i3-10110U at 2.10 GHz, 7.84 GiB RAM. Docker Desktop reports 4 CPUs and 3.75 GiB available to its VM; this is not a per-container memory limit.
+Adult (20,000-row sample, 4,000 test rows):
+
+| Model | Accuracy | Macro-F1 | ROC-AUC |
+|---|---|---|---|
+| Baseline | 0.759 | 0.432 | 0.500 |
+| Logistic regression | 0.848 | 0.775 | 0.903 |
+| Random forest | 0.855 | 0.791 | 0.902 |
+| XGBoost | 0.869 | 0.811 | 0.925 |
+| Decision tree | 0.814 | 0.750 | 0.755 |
+
+Bank (20,000-row sample, 4,000 test rows), accuracy / macro-F1 / ROC-AUC:
+
+| Model | With `duration` | Without `duration` |
+|---|---|---|
+| Baseline | 0.883 / 0.469 / 0.500 | 0.883 / 0.469 / 0.500 |
+| Logistic regression | 0.898 / 0.696 / 0.906 | 0.889 / 0.605 / 0.758 |
+| Random forest | 0.901 / 0.700 / 0.927 | 0.888 / 0.626 / 0.777 |
+| XGBoost | 0.905 / 0.750 / 0.928 | 0.888 / 0.652 / 0.765 |
+| Decision tree | 0.873 / 0.684 / 0.678 | 0.830 / 0.608 / 0.614 |
+
+Both Bank runs use exactly the same test rows. I only removed `duration`, and only because the dataset's own documentation says it should not be used for a realistic model. I did not remove features based on test results. For Adult and Wine I removed nothing.
 
 ## Limitations
 
-- One split per run; rankings can change with another seed or sample.
-- Fixed model set and default parameters; this is not a tuning or AutoML system.
-- Slices show where predictions differ, not why a model made a prediction.
-- No authentication, run cancellation, or support for grouped/time-ordered data.
-- Class weighting and paired bootstrap intervals are S-priority items and are not available in this version.
+- Classification on CSV files only (2 to 10 classes). No regression.
+- One split and one seed per run, so the ranking can change with a different seed.
+- McNemar's test is about accuracy only. I do not give confidence intervals for macro-F1 differences.
+- The tool cannot notice leakage that comes from what a column means, like `duration`. A person has to spot that.
+- A default decision tree grows until its leaves are pure, so it always says "100% confident". That is not real certainty.
+- Files with more than 20,000 rows are sampled down to 20,000.
+- The Adult data has `sex` and `race` columns. I kept them as given and did no fairness analysis, so do not use these models for real decisions about people.
+- It runs on your own machine only. There is no login, so do not put it on the internet.
 
-## Development
+## Datasets
 
-```powershell
-py -3.11 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install --no-deps -r backend\requirements.lock
-Set-Location backend
-..\.venv\Scripts\python.exe -m pytest -q
+- Adult: Becker and Kohavi, UCI Machine Learning Repository, https://doi.org/10.24432/C5XW20
+- Bank Marketing: UCI Machine Learning Repository, https://archive.ics.uci.edu/dataset/222/bank
+- Wine and Breast Cancer Wisconsin (the built-in sample): from scikit-learn, https://archive.ics.uci.edu/dataset/109/wine
+The datasets are not in this repo. Check each dataset's terms before sharing the files.
 
-Set-Location ..\frontend
-npm ci
-npm run lint
-npm run build
-```
+## Built with
 
-## License and data
+Python, FastAPI, scikit-learn, XGBoost, pandas, SciPy, React, Docker, pytest.
 
-Use the license and attribution terms attached to each dataset. UCI Adult and Covertype files, derived extracts, uploads, and run artifacts are validation inputs, not committed project assets.
+###Tested On
+- CPU: Intel Core i3-10110U @ 2.10 GHz
+- RAM: 8 GB (7.84 GB usable)
+- OS: Windows 11 Home Single Language, 64-bit (Version 25H2)
+- Execution: CPU-based, no dedicated GPU
+
+Payal Goswami | [LinkedIn](https://www.linkedin.com/in/payal-goswami97/) |
